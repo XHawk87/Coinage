@@ -1,0 +1,87 @@
+## Coinage configuration file
+##
+## default: String - The default currency to be used with Coinage commands
+## currencies: - All currency information is in this section
+##   [currency name]: - Settings for the named currency
+##     alias: Text with spaces and colours - The display name for the currency
+##     denominations: - All denominations for this currency go in this section
+##       [denomination name]: - Settings for the named denomination of this currency
+##         alias: Text with spaces and colours - The display name for this denomination
+##         print: Text with spaces and colours - The printed marking displayed underneath the coin
+##         value: Whole number - The value of this denomination in the units of this currency
+##         item-id: Whole number - The item ID used for this currency
+##         item-data: Whole number - The data value used for this currency (optional, defaults to 0)
+---
+default: goldstandard
+currencies:
+  goldstandard:
+    alias: '&eGold Standard'
+    denominations:
+      gold1bit:
+        alias: '&e1p'
+        print: '&e one-bit coin'
+        value: 1
+        item-id: 371
+      gold2bit:
+        alias: '&e2p'
+        print: '&e two-bit coin'
+        value: 2
+        item-id: 371
+      gold5bit:
+        alias: '&e5p'
+        print: '&e five-bit coin'
+        value: 5
+        item-id: 371
+      gold10bit:
+        alias: '&e10p'
+        print: '&e ten-bit coin'
+        value: 10
+        item-id: 371
+      gold20bit:
+        alias: '&e20p'
+        print: '&e twenty-bit coin'
+        value: 20
+        item-id: 371
+      gold50bit:
+        alias: '&e50p'
+        print: '&e fifty-bit coin'
+        value: 50
+        item-id: 371
+      gold1bar:
+        alias: '&eG1'
+        print: '&e one bar coin'
+        value: 100
+        item-id: 266
+      gold2bar:
+        alias: '&eG2'
+        print: '&e two bar coin'
+        value: 200
+        item-id: 266
+      gold5bar:
+        alias: '&eG5'
+        print: '&e five bar note'
+        value: 500
+        item-id: 339
+      gold10bar:
+        alias: '&eG10'
+        print: '&e ten bar note'
+        value: 1000
+        item-id: 339
+      gold20bar:
+        alias: '&eG20'
+        print: '&e twenty bar note'
+        value: 2000
+        item-id: 339
+      gold50bar:
+        alias: '&eG50'
+        print: '&e fifty bar note'
+        value: 5000
+        item-id: 339
+  goldstandardcommemorative:
+    alias: '&eCommemorative Gold Standard'
+    denominations:
+      gold1000bar:
+        alias: '&e G1000'
+        print: '&e thousand bar coin'
+        value: 100000
+        item-id: 322

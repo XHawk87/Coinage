@@ -1,0 +1,113 @@
+name: ${project.name}
+main: ${project.groupId}.${project.artifactId}.${project.name}
+version: ${project.version}
+description: ${project.description}
+
+commands:
+  CreateCurrency:
+    description: Creates a new currency with its own set of denominations with the given name
+    usage: /CreateCurrency [name] [alias]
+    permissions: coinage.commands.createcurrency
+  DeleteCurrency:
+    description: Deletes a given currency, removing all of its denominations
+    usage: /DeleteCurrency [name]
+    permissions: coinage.commands.deletecurrency
+  SetDefaultCurrency:
+    description: Sets the default currency to use with all Coinage commands. Defaults to the first currency created
+    usage: /SetDefaultCurrency [name]
+    permissions: coinage.commands.setdefaultcurrency
+  CreateDenomination:
+    description: Create a new denomination of a currency with the given value and text
+    usage: /CreateDenomination ([currency]) [denomination] [alias] [value] ([item ID:data value]) [text]
+    permissions: coinage.commands.createdenomination
+  DeleteDenomination:
+    description: Deletes an existing denomination of a currency. This does not remove existing coins but they will no longer be legal tender.
+    usage: /DeleteDenomination ([currency]) [denomination]
+    permissions: coinage.commands.deletedenomination
+  GiveCoins:
+    description: Give the specified number of coins of a particular denomination or a group of coins that add to the specified value
+    usage: /GiveCoins ([player]) ([currency]) ([denomination]) [amount]
+    permissions: coinage.commands.givecoins
+  GiveCurrency:
+    description: Give a group of coins that add to the specified value
+    usage: /GiveCurrency ([player]) ([currency]) [value]
+    permissions: coinage.commands.givecurrency
+  MintCoins:
+    description: Convert the held items into minted coins of a specific denomination
+    usage: /MintCoins ([player]) ([currency]) [denomination]
+    permissions: coinage.commands.mintcoins
+  SpendCoins:
+    description: Remove the given value of coins from the specified player and give change where needed
+    usage: /SpendCoins [player] ([currency]) [value]
+    permissions: coinage.commands.spendcoins
+  SplitCoins:
+    description: Split the held coins into a specified number of smaller denominations
+    usage: /SplitCoins ([player]) [denomination=amount...]
+    permissions: coinage.commands.splitcoins
+  CombineCoins:
+    description: Changes all held coins into the highest denominations possible of equal value
+    usage: /CombineCoins ([player])
+    permissions: coinage.commands.combinecoins
+  ConvertCoins: 
+    description: Converts coins from one currency to another
+    usage: /ConvertCoins ([player]) [from currency] [amount] [to currency] [amount]
+    permissions: coinage.commands.convertcoins
+  CoinReload:
+    description: Reloads all currencies and denominations from the configuration file
+    usage: /CoinReload
+    permissions: coinage.commands.coinreload
+  CoinValue:
+    description: Gets the value of the held coins or all those of the specified currency for a given player and displays it to the player
+    usage: /CoinValue ([player]) ([currency])
+    permissions: coinage.commands.coinvalue
+  CoinList:
+    description: Lists all denominations of a given currencies or lists all currencies if none is given and there is more than one
+    usage: /CoinList ([currency])
+    permissions: coinage.commands.coinlist
+
+permissions:
+  coinage.commands.createcurrency:
+    description: Allows use of the CreateCurrency command
+    default: op
+  coinage.commands.deletecurrency:
+    description: Allows use of the DeleteCurrency command
+    default: op
+  coinage.commands.setdefaultcurrency:
+    description: Allows use of the SetDefaultCurrency command
+    default: op
+  coinage.commands.createdenomination:
+    description: Allows use of the CreateDenomination command
+    default: op
+  coinage.commands.deletedenomination:
+    description: Allows use of the DeleteDenomination command
+    default: op
+  coinage.commands.givecoins:
+    description: Allows use of the GiveCoins command
+    default: op
+  coinage.commands.givecurrency:
+    description: Allows use of the GiveCurrency command
+    default: op
+  coinage.commands.mintcoins:
+    description: Allows use of the MintCoins command
+    default: op
+  coinage.commands.spendcoins:
+    description: Allows use of the SpendCoins command
+    default: op
+  coinage.commands.splitcoins:
+    description: Allows use of the SplitCoins command
+    default: op
+  coinage.commands.combinecoins:
+    description: Allows use of the CombineCoins command
+    default: op
+  coinage.commands.convertcoins:
+    description: Allows use of the ConvertCoins command
+    default: op
+  coinage.commands.coinreload:
+    description: Allows use of the CoinReload command
+    default: op
+  coinage.commands.coinvalue:
+    description: Allows use of the CoinValue command
+    default: op
+  coinage.commands.coinlist:
+    description: Allows use of the CoinList command
+    default: op
