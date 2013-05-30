@@ -71,8 +71,15 @@ public class SpendCoinsCommand extends CoinCommand {
             return true;
         }
 
-        currency.spend(player, value);
-        sender.sendMessage(value + " in " + currency.toString() + " was deducted from " + player.getDisplayName());
+        if (currency.spend(player, value)) {
+            if (sender != player) {
+                sender.sendMessage(value + " in " + currency.toString() + " was deducted from " + player.getDisplayName());
+            }
+        } else {
+            if (sender != player) {
+                sender.sendMessage(player.getDisplayName() + " does not have " + value + " in " + currency.toString() + " to spend");
+            }
+        }
         return true;
     }
 }

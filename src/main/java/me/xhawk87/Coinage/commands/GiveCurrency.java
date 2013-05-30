@@ -66,6 +66,7 @@ public class GiveCurrency extends CoinCommand {
                         sender.sendMessage("There is no matching player or currency with name " + firstArg);
                         return true;
                     }
+                    currency = plugin.getDefaultCurrency();
                 }
             }
         } else {

@@ -244,9 +244,11 @@ public class Currency {
         while (value > 0) {
             int denomValue = entry.getKey();
             int amount = value / denomValue;
-            if (amount > 0) {
-                value -= amount * denomValue;
-                coins.add(entry.getValue().create(amount));
+            while (amount > 0) {
+                ItemStack coin = entry.getValue().create(amount);
+                value -= coin.getAmount() * denomValue;
+                coins.add(coin);
+                amount -= coin.getAmount();
             }
             entry = byValue.lowerEntry(entry.getKey());
             if (entry == null && value > 0) {
@@ -300,9 +302,12 @@ public class Currency {
      * @return True if the player had enough value in currency, false if not
      */
     public boolean spend(Player player, int totalValue) {
-        spend(player.getInventory(), totalValue);
-        player.updateInventory();
-        player.sendMessage("You hand over " + totalValue + " in " + toString());
+        if (spend(player.getInventory(), totalValue)) {
+            player.updateInventory();
+            player.sendMessage("You hand over " + totalValue + " in " + toString());
+        } else {
+            player.sendMessage("You do not have " + totalValue + " in " + toString() + " in your inventory to hand over");
+        }
         return true;
     }
 
