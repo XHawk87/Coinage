@@ -33,6 +33,7 @@ import me.xhawk87.Coinage.commands.SplitCoinsCommand;
 import me.xhawk87.Coinage.listeners.CoinListener;
 import me.xhawk87.Coinage.listeners.MoneyBagListener;
 import me.xhawk87.Coinage.moneybags.MoneyBag;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -351,6 +352,14 @@ public class Coinage extends JavaPlugin {
                     key = UUID.randomUUID().toString();
                 }
 
+                // Update item lore
+                lore = MoneyBag.encodeLore(key) + ChatColor.LIGHT_PURPLE + "Right-click while holding to open";
+                loreStrings.clear();
+                loreStrings.add(lore);
+                meta.setLore(loreStrings);
+                item.setItemMeta(meta);
+                
+                // Create moneybag
                 MoneyBag moneybag = new MoneyBag(this, key, size, title);
                 moneybags.put(key, moneybag);
                 saveMoneyBag(moneybag);
