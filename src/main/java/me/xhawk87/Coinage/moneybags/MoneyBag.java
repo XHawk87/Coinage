@@ -69,7 +69,7 @@ public class MoneyBag implements InventoryHolder {
         ConfigurationSection contentsData = data.getConfigurationSection("contents");
         for (String key : contentsData.getKeys(false)) {
             int slot = Integer.parseInt(key);
-            ItemStack coin = data.getItemStack(key);
+            ItemStack coin = contentsData.getItemStack(key);
             inventory.setItem(slot, coin);
         }
     }
