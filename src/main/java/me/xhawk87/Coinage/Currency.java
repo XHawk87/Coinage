@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+import me.xhawk87.Coinage.moneybags.MoneyBag;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.BlockState;
@@ -207,6 +208,9 @@ public class Currency {
      * denominations in order to reduce the total number of coins held by the
      * player. </p>
      *
+     * <p>This will attempt to find and fill moneybags within the player's
+     * inventory before it fills the inventory itself</p>
+     *
      * <p>The player will not give change, as such an error log will be
      * generated if the exact number of coins cannot be made out. This can only
      * occur if there is no denomination worth a single unit of the
@@ -230,6 +234,9 @@ public class Currency {
      * <p>Gives the specified value in coins of this currency to the given
      * inventory. Any excess coins that cannot be carried will be dropped at the
      * location of the inventory holder</p>
+     *
+     * <p>This will attempt to find and fill moneybags within the inventory
+     * before it fills the inventory itself</p>
      *
      * <p>This will use larger denominations for preference over smaller
      * denominations in order to reduce the total number of coins contained in
@@ -267,7 +274,25 @@ public class Currency {
             }
         }
 
-        HashMap<Integer, ItemStack> remaining = inv.addItem(coins.toArray(new ItemStack[coins.size()]));
+        // Attempt to find and fill moneybags first
+        for (ItemStack itemStack : inv.getContents()) {
+            if (itemStack == null || itemStack.getTypeId() == 0) {
+                continue;
+            }
+            MoneyBag moneyBag = plugin.getMoneyBag(itemStack);
+            if (moneyBag != null) {
+                ItemStack[] coinArray = coins.toArray(new ItemStack[coins.size()]);
+                Map<Integer, ItemStack> remaining = moneyBag.getInventory().addItem(coinArray);
+                if (remaining.isEmpty()) {
+                    return true;
+                }
+                coins = new ArrayList<>(remaining.values());
+            }
+        }
+
+        // Then attempt to fill inventory
+        ItemStack[] coinArray = coins.toArray(new ItemStack[coins.size()]);
+        HashMap<Integer, ItemStack> remaining = inv.addItem(coinArray);
         if (!remaining.isEmpty()) {
             Location loc;
             if (inv.getHolder() instanceof Entity) {
@@ -292,16 +317,19 @@ public class Currency {
     }
 
     /**
-     * Takes the specified value in this currency from the given player.
+     * <p>Takes the specified value in this currency from the given player.</p>
      *
-     * This will take smaller denominations for preference over larger
+     * <p>This will take smaller denominations for preference over larger
      * denominations in order to reduce the total number of coins carried by the
-     * player. This will give change to the player where appropriate.
+     * player. This will give change to the player where appropriate.</p>
      *
-     * If the player does not have enough, no coins will be taken.
+     * <p>This will also take money from any money bags if there is insufficient
+     * currency in the player's inventory</p>
      *
-     * The player will be notified of the transaction. To silently give coins
-     * use the player's inventory instead.
+     * <p>If the player does not have enough, no coins will be taken.</p>
+     *
+     * <p>The player will be notified of the transaction. To silently give coins
+     * use the player's inventory instead.</p>
      *
      * @param player The player to take coins from
      * @param totalValue The total value in this currency to take
@@ -317,14 +345,39 @@ public class Currency {
         return true;
     }
 
+    private int spendFromInventory(Inventory inv, Denomination denomination, int totalValue) {
+        int denomValue = denomination.getValue();
+        int maxAmount = (int) Math.ceil((double) totalValue / (double) denomValue);
+        int remaining = totalValue;
+        int index;
+        while ((index = first(inv, denomination)) != -1) {
+            ItemStack item = inv.getItem(index);
+
+            if (item.getAmount() >= maxAmount) {
+                remaining -= denomValue * maxAmount;
+                if (item.getAmount() == maxAmount) {
+                    inv.clear(index);
+                } else {
+                    item.setAmount(item.getAmount() - maxAmount);
+                }
+            } else {
+                remaining -= denomValue * item.getAmount();
+                inv.clear(index);
+            }
+        }
+        return remaining;
+    }
+
     /**
      * Takes the specified value in this currency from the given inventory.
      *
-     * This will take smaller denominations for preference over larger
+     * <p>This will take smaller denominations for preference over larger
      * denominations in order to reduce the total number of coins in the
-     * inventory. This will give change to the inventory where appropriate.
+     * inventory. This will give change to the inventory where appropriate.</p>
      *
-     * If the inventory does not contain enough, no coins will be taken.
+     * <p>This will also take money from any money bags in the inventory</p>
+     *
+     * <p>If the inventory does not contain enough, no coins will be taken.</p>
      *
      * @param inv The inventory to take coins from
      * @param totalValue The total value in this currency to take
@@ -337,26 +390,27 @@ public class Currency {
             return false;
         }
 
-        Map.Entry<Integer, Denomination> entry = byValue.firstEntry();
-        while (value > 0) {
-            int denomValue = entry.getKey();
-            int maxAmount = (int) Math.ceil((double) value / (double) denomValue);
-            Denomination denomination = entry.getValue();
-            int index;
-            while ((index = first(inv, denomination)) != -1) {
-                ItemStack item = inv.getItem(index);
+        List<MoneyBag> moneyBags = new ArrayList<>();
+        for (ItemStack itemStack : inv.getContents()) {
+            if (itemStack == null || itemStack.getTypeId() == 0) {
+                continue;
+            }
+            MoneyBag moneyBag = plugin.getMoneyBag(itemStack);
+            if (moneyBag != null) {
+                moneyBags.add(moneyBag);
+            }
+        }
 
-                if (item.getAmount() >= maxAmount) {
-                    value -= denomValue * maxAmount;
-                    if (item.getAmount() == maxAmount) {
-                        inv.clear(index);
-                    } else {
-                        item.setAmount(item.getAmount() - maxAmount);
-                    }
-                } else {
-                    value -= denomValue * item.getAmount();
-                    inv.clear(index);
+        Map.Entry<Integer, Denomination> entry = byValue.firstEntry();
+        while (value > 0 && entry != null) {
+            int denomValue = entry.getKey();
+            Denomination denomination = entry.getValue();
+            value = spendFromInventory(inv, denomination, value);
+            for (MoneyBag moneyBag : moneyBags) {
+                if (value <= 0) {
+                    break;
                 }
+                value = spendFromInventory(moneyBag.getInventory(), denomination, value);
             }
             entry = byValue.higherEntry(denomValue);
         }
@@ -367,37 +421,26 @@ public class Currency {
     }
 
     /**
-     * Combine all coins of this currency in the given inventory into higher
+     * <p>Combine all coins of this currency in the given inventory into higher
      * denominations where possible in order to minimise the number of coins
-     * carried.
+     * carried.</p>
+     *
+     * <p>This also combines coins in moneybags within the inventory, attempting
+     * to place all coins into the fewest bags possible and the inventory itself
+     * as a last resort</p>
      *
      * @param inv The inventory
      */
     public void combine(Inventory inv) {
-        int coinCount = 0;
-        ItemStack[] contents = inv.getContents();
-        for (int i = 0; i < contents.length; i++) {
-            ItemStack item = contents[i];
-            if (item == null) {
-                continue;
-            }
-            ItemMeta meta = item.getItemMeta();
-            if (meta.hasLore() && meta.getLore().size() == 1) {
-                String lore = meta.getLore().get(0);
-                if (matches(lore)) {
-                    Denomination denomination = getDenominationByLore(lore);
-                    if (denomination != null) {
-                        coinCount += denomination.getValue() * item.getAmount();
-                        inv.clear(i);
-                    }
-                }
-            }
-        }
+        int coinCount = getCoinCount(inv);
+        spend(inv, coinCount);
         give(inv, coinCount);
     }
 
     /**
      * Get the total value of all coins in the given inventory for this currency
+     *
+     * <p>This will include coins in any money bags within this inventory</p>
      *
      * @param inv The inventory to count
      * @return The total value
@@ -408,13 +451,18 @@ public class Currency {
             if (item == null) {
                 continue;
             }
-            ItemMeta meta = item.getItemMeta();
-            if (meta.hasLore() && meta.getLore().size() == 1) {
-                String lore = meta.getLore().get(0);
-                if (matches(lore)) {
-                    Denomination denomination = getDenominationByLore(lore);
-                    if (denomination != null) {
-                        coinCount += denomination.getValue() * item.getAmount();
+            MoneyBag moneyBag = plugin.getMoneyBag(item);
+            if (moneyBag != null) {
+                coinCount += getCoinCount(moneyBag.getInventory());
+            } else {
+                ItemMeta meta = item.getItemMeta();
+                if (meta.hasLore() && meta.getLore().size() == 1) {
+                    String lore = meta.getLore().get(0);
+                    if (matches(lore)) {
+                        Denomination denomination = getDenominationByLore(lore);
+                        if (denomination != null) {
+                            coinCount += denomination.getValue() * item.getAmount();
+                        }
                     }
                 }
             }
