@@ -103,6 +103,12 @@ public class Currency {
         return byPrint.get(lore.substring(getAlias().length()));
     }
 
+    /**
+     * Gets a denomination of this currency by its value
+     *
+     * @param value The value of the denomination
+     * @return The denomination with this value
+     */
     public Denomination getDenominationByValue(int value) {
         return byValue.get(value);
     }
