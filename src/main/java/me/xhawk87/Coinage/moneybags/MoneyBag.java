@@ -4,14 +4,21 @@
  */
 package me.xhawk87.Coinage.moneybags;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import me.xhawk87.Coinage.Coinage;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -31,10 +38,21 @@ public class MoneyBag implements InventoryHolder {
     private String id;
     private Coinage plugin;
     private Inventory inventory;
+    private AsyncYmlSaver saver;
 
     public MoneyBag(Coinage plugin, String id) {
         this.plugin = plugin;
         this.id = id;
+        File file = new File(new File(plugin.getDataFolder(), "moneybags"), id + ".yml");
+        FileConfiguration data = new YamlConfiguration();
+        try {
+            data.load(file);
+        } catch (FileNotFoundException ex) {
+            // Ignore
+        } catch (IOException | InvalidConfigurationException ex) {
+            plugin.getLogger().log(Level.SEVERE, "Could not load " + file.getPath(), ex);
+        }
+        this.saver = new AsyncYmlSaver(plugin, data, file);
     }
 
     public MoneyBag(Coinage plugin, String id, int size, String title) {
@@ -47,7 +65,8 @@ public class MoneyBag implements InventoryHolder {
         return inventory;
     }
 
-    public void save(ConfigurationSection data) {
+    public void save() {
+        FileConfiguration data = saver.getData();
         data.set("size", inventory.getSize());
         data.set("title", inventory.getTitle());
         ItemStack[] contents = inventory.getContents();
@@ -60,9 +79,11 @@ public class MoneyBag implements InventoryHolder {
                 contentsData.set(Integer.toString(i), coin);
             }
         }
+        saver.save();
     }
 
-    public void load(ConfigurationSection data) {
+    public void load() {
+        FileConfiguration data = saver.getData();
         int size = data.getInt("size");
         String title = data.getString("title");
         inventory = plugin.getServer().createInventory(this, size, title);
@@ -92,7 +113,7 @@ public class MoneyBag implements InventoryHolder {
             ((Player) out.getHolder()).updateInventory();
         }
 
-        plugin.saveMoneyBag(this);
+        save();
     }
 
     public String getId() {

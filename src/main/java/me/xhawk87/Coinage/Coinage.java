@@ -5,16 +5,13 @@
 package me.xhawk87.Coinage;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
 import me.xhawk87.Coinage.commands.CoinListCommand;
 import me.xhawk87.Coinage.commands.CoinReloadCommand;
 import me.xhawk87.Coinage.commands.CoinValueCommand;
@@ -33,17 +30,13 @@ import me.xhawk87.Coinage.commands.SplitCoinsCommand;
 import me.xhawk87.Coinage.listeners.CoinListener;
 import me.xhawk87.Coinage.listeners.MoneyBagListener;
 import me.xhawk87.Coinage.moneybags.MoneyBag;
+import me.xhawk87.Coinage.moneybags.YamlFileFilter;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 /**
  *
@@ -91,14 +84,6 @@ public class Coinage extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (moneyBagSaveTask != null) {
-            moneyBagSaveTask.cancel();
-            try {
-                moneyBagData.save(moneyBagFile);
-            } catch (IOException ex) {
-                getLogger().log(Level.SEVERE, "Could not save moneybags.yml before closing down: \n" + moneyBagData.saveToString(), ex);
-            }
-        }
     }
 
     /**
@@ -358,11 +343,11 @@ public class Coinage extends JavaPlugin {
                 loreStrings.add(lore);
                 meta.setLore(loreStrings);
                 item.setItemMeta(meta);
-                
+
                 // Create moneybag
                 MoneyBag moneybag = new MoneyBag(this, key, size, title);
                 moneybags.put(key, moneybag);
-                saveMoneyBag(moneybag);
+                moneybag.save();
                 return moneybag;
             } else {
                 return moneybags.get(data);
@@ -370,59 +355,19 @@ public class Coinage extends JavaPlugin {
         }
         return null;
     }
-    private File moneyBagFile;
-    private FileConfiguration moneyBagData;
 
     public void loadMoneyBags() {
-        moneyBagFile = new File(getDataFolder(), "moneybags.yml");
-        moneyBagData = new YamlConfiguration();
-        try {
-            moneyBagData.load(moneyBagFile);
-        } catch (FileNotFoundException ex) {
-            // Ignore
-        } catch (IOException | InvalidConfigurationException ex) {
-            getLogger().log(Level.SEVERE, "Could not load moneybags.yml", ex);
-        }
-        for (String key : moneyBagData.getKeys(false)) {
-            MoneyBag moneyBag = new MoneyBag(this, key);
-            moneyBag.load(moneyBagData.getConfigurationSection(key));
-            moneybags.put(key, moneyBag);
-        }
-    }
-    private BukkitTask moneyBagSaveTask;
-
-    public void saveMoneyBag(MoneyBag moneybag) {
-        // Save changes into memory immediately
-        moneybag.save(moneyBagData.createSection(moneybag.getId()));
-
-        // If there is currently no save task running
-        if (moneyBagSaveTask == null) {
-            final Coinage thisPlugin = this;
-            // Wait 5 seconds before setting up a save to disk
-            moneyBagSaveTask = new BukkitRunnable() {
-                @Override
-                public void run() {
-                    // Synchronously copy the data to a string to avoid conflicts
-                    final String dataString = moneyBagData.saveToString();
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            // Save the data string to disk asynchronously
-                            if (!moneyBagFile.exists()) {
-                                getDataFolder().mkdirs();
-                            }
-                            try (FileWriter writer = new FileWriter(moneyBagFile)) {
-                                writer.write(dataString);
-                            } catch (IOException ex) {
-                                getLogger().log(Level.SEVERE, "Could not save to moneybags.yml", ex);
-                            }
-
-                            // Allow a new save task to be started
-                            moneyBagSaveTask = null;
-                        }
-                    }.runTaskAsynchronously(thisPlugin);
-                }
-            }.runTaskLater(this, 100);
+        FilenameFilter filenameFilter = new YamlFileFilter();
+        File moneybagsFolder = new File(getDataFolder(), "moneybags");
+        if (moneybagsFolder.exists()) {
+            for (String filename : moneybagsFolder.list(filenameFilter)) {
+                String key = filename.substring(0, filename.length() - ".yml".length());
+                MoneyBag moneyBag = new MoneyBag(this, key);
+                moneyBag.load();
+                moneybags.put(key, moneyBag);
+            }
+        } else {
+            moneybagsFolder.mkdirs();
         }
     }
 }
