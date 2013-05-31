@@ -72,7 +72,7 @@ public class MoneyBagListener implements Listener {
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void noCraftingWithMoneyBags(CraftItemEvent event) {
         for (ItemStack item : event.getInventory().getMatrix()) {
-            if (item == null) {
+            if (item == null || item.getTypeId() == 0) {
                 continue;
             }
 

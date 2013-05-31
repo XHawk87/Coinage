@@ -78,7 +78,7 @@ public class MoneyBag implements InventoryHolder {
             if (coin == null || coin.getTypeId() == 0) {
                 continue;
             }
-            if (plugin.getDenominationOfCoin(coin) != null) {
+            if (plugin.getDenominationOfCoin(coin) == null) {
                 inventory.clear(i);
                 out.addItem(coin);
             }

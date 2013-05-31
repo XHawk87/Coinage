@@ -306,6 +306,9 @@ public class Coinage extends JavaPlugin {
     }
 
     public boolean isMoneyBag(ItemStack item) {
+        if (!item.hasItemMeta()) {
+            return false;
+        }
         ItemMeta itemMeta = item.getItemMeta();
         if (!itemMeta.hasDisplayName() || !itemMeta.hasLore()) {
             return false;
