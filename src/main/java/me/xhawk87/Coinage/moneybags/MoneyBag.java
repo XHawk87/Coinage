@@ -12,6 +12,7 @@ import me.xhawk87.Coinage.Coinage;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -106,6 +107,7 @@ public class MoneyBag implements InventoryHolder {
         List<String> loreStrings = new ArrayList<>();
         loreStrings.add(lore);
         meta.setLore(loreStrings);
+        meta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 1, true);
         result.setItemMeta(meta);
         ShapedRecipe recipe = new ShapedRecipe(result);
         recipe.shape(shape);
@@ -124,6 +126,7 @@ public class MoneyBag implements InventoryHolder {
         List<String> loreStrings = new ArrayList<>();
         loreStrings.add(lore);
         meta.setLore(loreStrings);
+        meta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 1, true);
         result.setItemMeta(meta);
         ShapelessRecipe recipe = new ShapelessRecipe(result);
         for (ItemStack material : ingredients) {
@@ -147,6 +150,7 @@ public class MoneyBag implements InventoryHolder {
         List<String> loreStrings = new ArrayList<>();
         loreStrings.add(lore);
         meta.setLore(loreStrings);
+        meta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 1, true);
         result.setItemMeta(meta);
         if (data.isConfigurationSection("shaped-recipe")) {
             ConfigurationSection shapedSection = data.getConfigurationSection("shaped-recipe");
