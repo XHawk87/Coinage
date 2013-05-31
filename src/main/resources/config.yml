@@ -13,6 +13,19 @@
 ##         item-data: Whole number - The data value used for this currency (optional, defaults to 0)
 ---
 default: goldstandard
+moneybags:
+  moneybag9:
+    title: 'Money Bag'
+    size: 9
+    item-id: 334
+    item-data: 0
+    shaped-recipe:
+      shape:
+        - 's'
+        - 'l'
+      materials:
+        s: '287:0'
+        l: '334:0'
 currencies:
   goldstandard:
     alias: '&eGold Standard'
