@@ -50,12 +50,13 @@ public class MoneyBag implements InventoryHolder {
         data.set("size", inventory.getSize());
         data.set("title", inventory.getTitle());
         ItemStack[] contents = inventory.getContents();
+        ConfigurationSection contentsData = data.createSection("contents");
         for (int i = 0; i < contents.length; i++) {
             ItemStack coin = contents[i];
             if (coin == null || coin.getTypeId() == 0) {
-                data.set(Integer.toString(i), null);
+                contentsData.set(Integer.toString(i), null);
             } else {
-                data.set(Integer.toString(i), coin);
+                contentsData.set(Integer.toString(i), coin);
             }
         }
     }
@@ -64,7 +65,8 @@ public class MoneyBag implements InventoryHolder {
         int size = data.getInt("size");
         String title = data.getString("title");
         inventory = plugin.getServer().createInventory(this, size, title);
-        for (String key : data.getKeys(false)) {
+        ConfigurationSection contentsData = data.getConfigurationSection("contents");
+        for (String key : contentsData.getKeys(false)) {
             int slot = Integer.parseInt(key);
             ItemStack coin = data.getItemStack(key);
             inventory.setItem(slot, coin);
