@@ -31,7 +31,7 @@ public class AsyncYmlSaver implements Runnable {
         this.file = file;
     }
 
-    public void save() {
+    public synchronized void save() {
         invalid = true;
         if (task == null) {
             dataCache = data.saveToString();
@@ -48,6 +48,7 @@ public class AsyncYmlSaver implements Runnable {
             plugin.getLogger().log(Level.SEVERE, "Cannot save " + file.getPath() + ":\n" + dataCache, ex);
         }
 
+        dataCache = null;
         task = null;
         if (invalid) {
             save();
