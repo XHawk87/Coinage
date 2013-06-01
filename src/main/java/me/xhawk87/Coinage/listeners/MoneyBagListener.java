@@ -49,7 +49,7 @@ public class MoneyBagListener implements Listener {
                     MoneyBag moneybag = plugin.getMoneyBag(event.getItem());
                     if (moneybag != null) {
                         event.getPlayer().openInventory(moneybag.getInventory());
-                        event.setUseItemInHand(Event.Result.DENY);
+                        event.setCancelled(true);
                     }
             }
         }
