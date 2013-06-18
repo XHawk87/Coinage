@@ -283,6 +283,7 @@ public class Currency {
             if (moneyBag != null) {
                 ItemStack[] coinArray = coins.toArray(new ItemStack[coins.size()]);
                 Map<Integer, ItemStack> remaining = moneyBag.getInventory().addItem(coinArray);
+                moneyBag.save();
                 if (remaining.isEmpty()) {
                     return true;
                 }
@@ -411,6 +412,7 @@ public class Currency {
                     break;
                 }
                 value = spendFromInventory(moneyBag.getInventory(), denomination, value);
+                moneyBag.save();
             }
             entry = byValue.higherEntry(denomValue);
         }
