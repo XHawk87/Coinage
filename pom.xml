@@ -5,7 +5,7 @@
 
     <groupId>me.xhawk87</groupId>
     <artifactId>Coinage</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7</version>
     <packaging>jar</packaging>
 
     <name>Coinage</name>

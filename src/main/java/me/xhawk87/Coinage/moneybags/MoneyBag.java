@@ -5,7 +5,7 @@
 package me.xhawk87.Coinage.moneybags;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +28,7 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 
 /**
  *
@@ -38,21 +39,12 @@ public class MoneyBag implements InventoryHolder {
     private String id;
     private Coinage plugin;
     private Inventory inventory;
-    private AsyncYmlSaver saver;
+    private File file;
 
     public MoneyBag(Coinage plugin, String id) {
         this.plugin = plugin;
         this.id = id;
-        File file = new File(new File(plugin.getDataFolder(), "moneybags"), id + ".yml");
-        FileConfiguration data = new YamlConfiguration();
-        try {
-            data.load(file);
-        } catch (FileNotFoundException ex) {
-            // Ignore
-        } catch (IOException | InvalidConfigurationException ex) {
-            plugin.getLogger().log(Level.SEVERE, "Could not load " + file.getPath(), ex);
-        }
-        this.saver = new AsyncYmlSaver(plugin, data, file);
+        this.file = new File(new File(plugin.getDataFolder(), "moneybags"), id + ".yml");
     }
 
     public MoneyBag(Coinage plugin, String id, int size, String title) {
@@ -65,8 +57,30 @@ public class MoneyBag implements InventoryHolder {
         return inventory;
     }
 
+    public void load() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                synchronized (file) {
+                    final FileConfiguration data = new YamlConfiguration();
+                    try {
+                        data.load(file);
+                    } catch (IOException | InvalidConfigurationException ex) {
+                        plugin.getLogger().log(Level.SEVERE, "Could not load " + file.getPath(), ex);
+                    }
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            onLoad(data);
+                        }
+                    }.runTask(plugin);
+                }
+            }
+        }.runTaskAsynchronously(plugin);
+    }
+
     public void save() {
-        FileConfiguration data = saver.getData();
+        FileConfiguration data = new YamlConfiguration();
         data.set("size", inventory.getSize());
         data.set("title", inventory.getTitle());
         ItemStack[] contents = inventory.getContents();
@@ -79,11 +93,22 @@ public class MoneyBag implements InventoryHolder {
                 contentsData.set(Integer.toString(i), coin);
             }
         }
-        saver.save();
+        final String toWrite = data.saveToString();
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                synchronized (file) {
+                    try (FileWriter out = new FileWriter(file)) {
+                        out.write(toWrite);
+                    } catch (IOException ex) {
+                        plugin.getLogger().log(Level.SEVERE, "Could not save moneybag: " + file.getPath(), ex);
+                    }
+                }
+            }
+        }.runTaskAsynchronously(plugin);
     }
 
-    public void load() {
-        FileConfiguration data = saver.getData();
+    public void onLoad(FileConfiguration data) {
         int size = data.getInt("size");
         String title = data.getString("title");
         inventory = plugin.getServer().createInventory(this, size, title);
