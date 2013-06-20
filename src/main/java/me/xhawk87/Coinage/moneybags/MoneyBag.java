@@ -87,9 +87,7 @@ public class MoneyBag implements InventoryHolder {
         ConfigurationSection contentsData = data.createSection("contents");
         for (int i = 0; i < contents.length; i++) {
             ItemStack coin = contents[i];
-            if (coin == null || coin.getTypeId() == 0) {
-                contentsData.set(Integer.toString(i), null);
-            } else {
+            if (coin != null && coin.getTypeId() != 0) {
                 contentsData.set(Integer.toString(i), coin);
             }
         }
@@ -98,6 +96,7 @@ public class MoneyBag implements InventoryHolder {
             @Override
             public void run() {
                 synchronized (file) {
+                    plugin.getLogger().info("Saving moneybag to file " + file.getPath() + ": " + toWrite.length() + " chars");
                     try (FileWriter out = new FileWriter(file)) {
                         out.write(toWrite);
                     } catch (IOException ex) {
