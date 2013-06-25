@@ -99,7 +99,7 @@ public class MoneyBag implements InventoryHolder {
             @Override
             public void run() {
                 synchronized (file) {
-                    if (currentSave == saveCount) {
+                    if (currentSave == saveCount) { // enforce save order
                         plugin.getLogger().info("Saving moneybag to file " + file.getPath() + ": " + toWrite.length() + " chars");
                         try (FileWriter out = new FileWriter(file)) {
                             out.write(toWrite);
