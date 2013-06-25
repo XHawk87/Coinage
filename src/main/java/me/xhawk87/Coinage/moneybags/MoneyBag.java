@@ -40,6 +40,7 @@ public class MoneyBag implements InventoryHolder {
     private Coinage plugin;
     private Inventory inventory;
     private File file;
+    private long saveCount;
 
     public MoneyBag(Coinage plugin, String id) {
         this.plugin = plugin;
@@ -91,16 +92,20 @@ public class MoneyBag implements InventoryHolder {
                 contentsData.set(Integer.toString(i), coin);
             }
         }
+        saveCount++;
+        final long currentSave = saveCount;
         final String toWrite = data.saveToString();
         new BukkitRunnable() {
             @Override
             public void run() {
                 synchronized (file) {
-                    plugin.getLogger().info("Saving moneybag to file " + file.getPath() + ": " + toWrite.length() + " chars");
-                    try (FileWriter out = new FileWriter(file)) {
-                        out.write(toWrite);
-                    } catch (IOException ex) {
-                        plugin.getLogger().log(Level.SEVERE, "Could not save moneybag: " + file.getPath(), ex);
+                    if (currentSave == saveCount) {
+                        plugin.getLogger().info("Saving moneybag to file " + file.getPath() + ": " + toWrite.length() + " chars");
+                        try (FileWriter out = new FileWriter(file)) {
+                            out.write(toWrite);
+                        } catch (IOException ex) {
+                            plugin.getLogger().log(Level.SEVERE, "Could not save moneybag: " + file.getPath(), ex);
+                        }
                     }
                 }
             }
