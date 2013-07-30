@@ -5,7 +5,7 @@
 
     <groupId>me.xhawk87</groupId>
     <artifactId>Coinage</artifactId>
-    <version>0.0.8</version>
+    <version>0.1</version>
     <packaging>jar</packaging>
 
     <name>Coinage</name>
@@ -13,7 +13,6 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <powermock.version>1.5</powermock.version>
     </properties>
     
     <repositories>
@@ -29,24 +28,12 @@
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
             <!-- Bukkit API Version, change if necessary -->
-            <version>1.5.2-R0.1</version>
+            <version>1.6.2-R0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.4</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
-            <version>${powermock.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
