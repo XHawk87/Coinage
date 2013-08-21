@@ -43,11 +43,13 @@ public class Currency {
             data.set("alias", alias);
         }
         ConfigurationSection denomSection = data.getConfigurationSection("denominations");
-        for (String key : denomSection.getKeys(false)) {
-            Denomination denomination = new Denomination(this, denomSection.getConfigurationSection(key));
-            denominations.put(key, denomination);
-            byPrint.put(denomination.getPrint(), denomination);
-            byValue.put(denomination.getValue(), denomination);
+        if (denomSection != null) {
+            for (String key : denomSection.getKeys(false)) {
+                Denomination denomination = new Denomination(this, denomSection.getConfigurationSection(key));
+                denominations.put(key, denomination);
+                byPrint.put(denomination.getPrint(), denomination);
+                byValue.put(denomination.getValue(), denomination);
+            }
         }
     }
 
