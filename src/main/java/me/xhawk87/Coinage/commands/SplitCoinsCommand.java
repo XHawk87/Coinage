@@ -31,7 +31,7 @@ public class SplitCoinsCommand extends CoinCommand {
 
     @Override
     public String getHelpMessage(CommandSender sender) {
-        return "/SplitCoins ([player]) [denomination=amount...]. Split the held coins into a specified number of smaller denominations";
+        return "/SplitCoins ([player]) [denomination=amount...]. Split the held coins into a specified number of smaller denominations. The denomination should be the id, not the display name or short name and the amount should be a whole number of coins. You can include as many denominations as you wish, so long as the total is less than or equal to the total value of the held coins.";
     }
 
     @Override
@@ -121,6 +121,7 @@ public class SplitCoinsCommand extends CoinCommand {
                 sender.sendMessage(player.getDisplayName() + " cannot split their " + heldAmount + " x " + heldCoin.toString() + " as their value does not equal or exceed the split " + splitValue);
             }
             player.sendMessage("Your held coins only amount to " + heldValue + " " + currency.toString() + " but you need " + splitValue + " " + currency.toString() + " to make this split");
+            return true;
         }
 
         // Remove the held coins
