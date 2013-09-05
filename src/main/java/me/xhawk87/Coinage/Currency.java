@@ -342,10 +342,11 @@ public class Currency {
         if (spend(player.getInventory(), totalValue)) {
             player.updateInventory();
             player.sendMessage("You hand over " + totalValue + " in " + toString());
+            return true;
         } else {
             player.sendMessage("You do not have " + totalValue + " in " + toString() + " in your inventory to hand over");
+            return false;
         }
-        return true;
     }
 
     private int spendFromInventory(Inventory inv, Denomination denomination, int totalValue) {
