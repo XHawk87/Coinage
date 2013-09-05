@@ -82,7 +82,7 @@ public class SplitCoinsCommand extends CoinCommand {
         int heldAmount = held.getAmount();
         int heldValue = heldCoin.getValue() * heldAmount;
         int splitValue = 0;
-        while (index++ < args.length - 1) {
+        for (; index < args.length; index++) {
             String arg = args[index];
             String[] parts = arg.split("=");
             if (parts.length != 2) {
