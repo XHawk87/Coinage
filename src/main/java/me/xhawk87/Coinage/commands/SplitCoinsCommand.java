@@ -86,7 +86,7 @@ public class SplitCoinsCommand extends CoinCommand {
             String arg = args[index];
             String[] parts = arg.split("=");
             if (parts.length != 2) {
-                sender.sendMessage("Denominations to split into should be in form denomId=amount: " + firstArg);
+                sender.sendMessage("Denominations to split into should be in form denomId=amount: " + arg);
                 return true;
             }
             String denomName = parts[0];
@@ -126,6 +126,7 @@ public class SplitCoinsCommand extends CoinCommand {
 
         // Remove the held coins
         player.getInventory().clear(player.getInventory().getHeldItemSlot());
+        player.sendMessage("You hand over " + heldAmount + " x " + heldCoin.toString());
 
         // Give the split coins
         List<ItemStack> toAdd = new ArrayList<>();
@@ -133,16 +134,20 @@ public class SplitCoinsCommand extends CoinCommand {
             Denomination denomination = entry.getKey();
             int amount = entry.getValue();
             toAdd.add(denomination.create(amount));
+            player.sendMessage("You receive " + amount + " x " + denomination.toString());
         }
         HashMap<Integer, ItemStack> toDrop = player.getInventory().addItem(toAdd.toArray(new ItemStack[toAdd.size()]));
         Location loc = player.getLocation();
         for (ItemStack drop : toDrop.values()) {
             loc.getWorld().dropItem(loc, drop);
         }
-        
+
         // Give change
         int change = heldValue - splitValue;
-        currency.give(player.getInventory(), change);
+        if (change > 0) {
+            currency.give(player.getInventory(), change);
+            player.sendMessage("You receive " + change + " in " + currency.toString());
+        }
 
         return true;
     }
