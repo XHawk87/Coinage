@@ -48,7 +48,7 @@ public class SpendCoinsCommand extends CoinCommand {
         Currency currency;
         if (args.length == 3) {
             String currencyName = args[index++];
-            currency = plugin.getCurrency(playerName);
+            currency = plugin.getCurrency(currencyName);
             if (currency == null) {
                 sender.sendMessage("There is no currency with id " + currencyName);
                 return true;
