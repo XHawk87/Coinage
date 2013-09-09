@@ -44,11 +44,11 @@ import org.bukkit.plugin.java.JavaPlugin;
  * @author XHawk87
  */
 public class Coinage extends JavaPlugin {
-
+    
     private Map<String, Currency> currencies = new HashMap<>();
     private Map<String, MoneyBag> moneybags = new HashMap<>();
     private List<Recipe> moneyBagTypes = new ArrayList<>();
-
+    
     @Override
     /**
      * This method was not meant for you. Using it puts you at serious risk of a
@@ -83,7 +83,7 @@ public class Coinage extends JavaPlugin {
         new CoinListener().registerEvents(this);
         new MoneyBagListener().registerEvents(this);
     }
-
+    
     @Override
     public void onDisable() {
     }
@@ -116,10 +116,14 @@ public class Coinage extends JavaPlugin {
      */
     public Currency getVaultCurrency() {
         String name = getConfig().getString("vault-currency");
-        if (name == null) {
+        if (name == null || name.equalsIgnoreCase("none")) {
             return null;
         }
-        return currencies.get(name.toLowerCase());
+        Currency vaultCurrency = currencies.get(name.toLowerCase());
+        if (vaultCurrency == null) {
+            getLogger().warning("Invalid vault-currency in config.yml: " + name + " does not exist");
+        }
+        return vaultCurrency;
     }
 
     /**
@@ -184,7 +188,7 @@ public class Coinage extends JavaPlugin {
         } else {
             getConfig().set("vault-currency", currency.getName());
         }
-
+        
         saveConfig();
         return true;
     }
@@ -207,7 +211,7 @@ public class Coinage extends JavaPlugin {
         if (currencies.containsKey(name.toLowerCase())) {
             return null;
         }
-
+        
         ConfigurationSection currencySection = getConfig().createSection("currencies." + name);
         currencySection.set("alias", alias);
         Currency currency = new Currency(this, currencySection);
@@ -227,7 +231,7 @@ public class Coinage extends JavaPlugin {
         if (!currencies.containsKey(name.toLowerCase())) {
             return false;
         }
-
+        
         currencies.remove(name.toLowerCase());
         getConfig().set("currencies." + name, null);
         saveConfig();
@@ -297,17 +301,17 @@ public class Coinage extends JavaPlugin {
         if (!item.hasItemMeta()) {
             return null;
         }
-
+        
         ItemMeta meta = item.getItemMeta();
-
+        
         if (!meta.hasDisplayName() || !meta.hasLore()) {
             return null;
         }
-
+        
         if (meta.getLore().size() != 1) {
             return null;
         }
-
+        
         String lore = meta.getLore().get(0);
         Currency currency = getCurrencyByLore(lore);
         if (currency == null) {
@@ -315,18 +319,17 @@ public class Coinage extends JavaPlugin {
         }
         return currency.getDenominationByLore(lore);
     }
-
+    
     @Override
     public void reloadConfig() {
         super.reloadConfig();
 
         // Clear previous data
-        Iterator<Currency> itCurrency = currencies.values().iterator();
-        while (itCurrency.hasNext()) {
-            itCurrency.next().unregister();
-            itCurrency.remove();
+        Currency vaultCurrency = getVaultCurrency();
+        if (vaultCurrency != null) {
+            vaultCurrency.unregister();
         }
-
+        
         currencies.clear();
         Iterator<Recipe> itRecipe = getServer().recipeIterator();
         while (itRecipe.hasNext()) {
@@ -344,14 +347,9 @@ public class Coinage extends JavaPlugin {
         }
 
         // Register with Vault (if installed)
-        String vaultCurrency = getConfig().getString("vault-currency");
+        vaultCurrency = getVaultCurrency();
         if (vaultCurrency != null) {
-            Currency currency = getCurrency(vaultCurrency);
-            if (currency != null) {
-                currency.register();
-            } else {
-                getLogger().warning("vault-currency in config.yml was not recognised: " + vaultCurrency);
-            }
+            vaultCurrency.register();
         }
 
         // Load money bag types
@@ -365,7 +363,7 @@ public class Coinage extends JavaPlugin {
         // Save any formatting changes
         saveConfig();
     }
-
+    
     public boolean isMoneyBag(ItemStack item) {
         if (!item.hasItemMeta()) {
             return false;
@@ -376,7 +374,7 @@ public class Coinage extends JavaPlugin {
         }
         for (Recipe moneyBagType : moneyBagTypes) {
             ItemStack result = moneyBagType.getResult();
-
+            
             if (result.getTypeId() == item.getTypeId()
                     && result.getDurability() == item.getDurability()) {
                 ItemMeta resultMeta = result.getItemMeta();
@@ -387,7 +385,7 @@ public class Coinage extends JavaPlugin {
         }
         return false;
     }
-
+    
     public MoneyBag getMoneyBag(ItemStack item) {
         if (!isMoneyBag(item)) {
             return null;
@@ -406,7 +404,7 @@ public class Coinage extends JavaPlugin {
                     return null; // Invalid, no size
                 }
                 String title = meta.getDisplayName();
-
+                
                 String key = UUID.randomUUID().toString();
                 while (moneybags.containsKey(key)) {
                     key = UUID.randomUUID().toString();
@@ -430,7 +428,7 @@ public class Coinage extends JavaPlugin {
         }
         return null;
     }
-
+    
     public void loadMoneyBags() {
         FilenameFilter filenameFilter = new YamlFileFilter();
         File moneybagsFolder = new File(getDataFolder(), "moneybags");
