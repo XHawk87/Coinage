@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import me.xhawk87.Coinage.moneybags.MoneyBag;
+import me.xhawk87.Coinage.vault.CoinageEconomy;
+import net.milkbowl.vault.Vault;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.BlockState;
@@ -21,6 +24,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.ServicePriority;
 
 /**
  *
@@ -33,6 +37,7 @@ public class Currency {
     private Map<String, Denomination> denominations = new HashMap<>();
     private Map<String, Denomination> byPrint = new HashMap<>();
     private NavigableMap<Integer, Denomination> byValue = new TreeMap<>();
+    private CoinageEconomy econ;
 
     public Currency(Coinage plugin, ConfigurationSection data) {
         this.plugin = plugin;
@@ -51,6 +56,15 @@ public class Currency {
                 byValue.put(denomination.getValue(), denomination);
             }
         }
+
+        // Register with Vault (if installed)
+        if (plugin.getServer().getPluginManager().getPlugin("Vault") != null) {
+            Vault vault = (Vault) plugin.getServer().getPluginManager().getPlugin("Vault");
+            econ = new CoinageEconomy(plugin, this);
+            econ.setEnabled(true);
+            plugin.getServer().getServicesManager().register(Economy.class, econ, vault, ServicePriority.Normal);
+            plugin.getLogger().info(getAlias() + " was registered with Vault");
+        }
     }
 
     /**
@@ -60,6 +74,11 @@ public class Currency {
      */
     public void delete() {
         plugin.deleteCurrency(this);
+        if (econ != null) {
+            econ.setEnabled(false);
+            plugin.getServer().getServicesManager().unregister(econ);
+            plugin.getLogger().info(getAlias() + " was unregistered with Vault");
+        }
     }
 
     /**

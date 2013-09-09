@@ -3,6 +3,8 @@ main: ${project.groupId}.${project.artifactId}.${project.name}
 version: ${project.version}
 description: ${project.description}
 
+softdepend: [Vault]
+
 commands:
   CreateCurrency:
     description: Creates a new currency with its own set of denominations with the given name

@@ -6,7 +6,6 @@ package me.xhawk87.Coinage.listeners;
 
 import me.xhawk87.Coinage.Coinage;
 import me.xhawk87.Coinage.moneybags.MoneyBag;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -57,8 +56,8 @@ public class MoneyBagListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onUpdateMoneyBag(InventoryClickEvent event) {
-        if (event.getInventory().getHolder() instanceof MoneyBag) {
-            final MoneyBag moneybag = (MoneyBag) event.getInventory().getHolder();
+        if (event.getView().getTopInventory().getHolder() instanceof MoneyBag) {
+            final MoneyBag moneybag = (MoneyBag) event.getView().getTopInventory().getHolder();
             final Inventory out = event.getView().getBottomInventory();
             new BukkitRunnable() {
                 @Override

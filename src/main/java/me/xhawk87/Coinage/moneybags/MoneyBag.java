@@ -139,7 +139,8 @@ public class MoneyBag implements InventoryHolder {
 
         // Update player inventory immediately
         if (out.getHolder() instanceof Player) {
-            ((Player) out.getHolder()).updateInventory();
+            Player player = (Player) out.getHolder();
+            player.updateInventory();
         }
 
         save();
