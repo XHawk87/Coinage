@@ -25,6 +25,7 @@ import me.xhawk87.Coinage.commands.GiveCoinsCommand;
 import me.xhawk87.Coinage.commands.GiveCurrency;
 import me.xhawk87.Coinage.commands.MintCoinsCommand;
 import me.xhawk87.Coinage.commands.SetDefaultCurrencyCommand;
+import me.xhawk87.Coinage.commands.SetVaultCurrencyCommand;
 import me.xhawk87.Coinage.commands.SpendCoinsCommand;
 import me.xhawk87.Coinage.commands.SplitCoinsCommand;
 import me.xhawk87.Coinage.listeners.CoinListener;
@@ -74,6 +75,7 @@ public class Coinage extends JavaPlugin {
         getCommand("GiveCurrency").setExecutor(new GiveCurrency(this));
         getCommand("MintCoins").setExecutor(new MintCoinsCommand(this));
         getCommand("SetDefaultCurrency").setExecutor(new SetDefaultCurrencyCommand(this));
+        getCommand("SetVaultCurrency").setExecutor(new SetVaultCurrencyCommand(this));
         getCommand("SpendCoins").setExecutor(new SpendCoinsCommand(this));
         getCommand("SplitCoins").setExecutor(new SplitCoinsCommand(this));
 
@@ -103,7 +105,21 @@ public class Coinage extends JavaPlugin {
                 return null;
             }
         }
-        return currencies.get(name);
+        return currencies.get(name.toLowerCase());
+    }
+
+    /**
+     * Gets the default currency to be used in commands
+     *
+     * @return The default currency, or null if no Coinage currency is used for
+     * Vault
+     */
+    public Currency getVaultCurrency() {
+        String name = getConfig().getString("vault-currency");
+        if (name == null) {
+            return null;
+        }
+        return currencies.get(name.toLowerCase());
     }
 
     /**
@@ -122,6 +138,27 @@ public class Coinage extends JavaPlugin {
     }
 
     /**
+     * Sets the default currency to be used in Vault transactions by its name
+     *
+     * This requires Vault to be installed
+     *
+     * @param name The currency to use for Vault, or "none" for no currency
+     * @return True if the vault currency was set, otherwise False
+     */
+    public boolean setVaultCurrency(String name) {
+        if (name == null || name.equalsIgnoreCase("none")) {
+            setVaultCurrency((Currency) null);
+            return true;
+        }
+        Currency currency = getCurrency(name);
+        if (currency == null) {
+            return false;
+        }
+        setVaultCurrency(currency);
+        return true;
+    }
+
+    /**
      * Sets the default currency to be used in commands.
      *
      * @param currency The currency to use as default
@@ -129,6 +166,27 @@ public class Coinage extends JavaPlugin {
     public void setDefaultCurrency(Currency currency) {
         getConfig().set("default", currency.getName());
         saveConfig();
+    }
+
+    /**
+     * Sets the default currency to be used in Vault transactions.
+     *
+     * This requires Vault to be installed
+     *
+     * @param currency The currency to use for Vault, or null for no currency
+     */
+    public boolean setVaultCurrency(Currency currency) {
+        if (!getServer().getPluginManager().isPluginEnabled("Vault")) {
+            return false;
+        }
+        if (currency == null) {
+            getConfig().set("vault-currency", null);
+        } else {
+            getConfig().set("vault-currency", currency.getName());
+        }
+
+        saveConfig();
+        return true;
     }
 
     /**
@@ -146,14 +204,14 @@ public class Coinage extends JavaPlugin {
      * exists
      */
     public Currency createCurrency(String name, String alias) {
-        if (currencies.containsKey(name)) {
+        if (currencies.containsKey(name.toLowerCase())) {
             return null;
         }
 
         ConfigurationSection currencySection = getConfig().createSection("currencies." + name);
         currencySection.set("alias", alias);
         Currency currency = new Currency(this, currencySection);
-        currencies.put(name, currency);
+        currencies.put(name.toLowerCase(), currency);
         saveConfig();
         return currency;
     }
@@ -166,11 +224,11 @@ public class Coinage extends JavaPlugin {
      * @return True if successfully deleted, False if it did not exist
      */
     public boolean deleteCurrency(String name) {
-        if (!currencies.containsKey(name)) {
+        if (!currencies.containsKey(name.toLowerCase())) {
             return false;
         }
 
-        currencies.remove(name);
+        currencies.remove(name.toLowerCase());
         getConfig().set("currencies." + name, null);
         saveConfig();
         return true;
@@ -184,8 +242,8 @@ public class Coinage extends JavaPlugin {
      */
     public void deleteCurrency(Currency currency) {
         String name = currency.getName();
-        currencies.remove(name);
-        getConfig().set("currencies." + name, null);
+        currencies.remove(name.toLowerCase());
+        getConfig().set("currencies." + name.toLowerCase(), null);
         saveConfig();
     }
 
@@ -197,7 +255,7 @@ public class Coinage extends JavaPlugin {
      * @return The currency, or null if it does not exist
      */
     public Currency getCurrency(String name) {
-        return currencies.get(name);
+        return currencies.get(name.toLowerCase());
     }
 
     /**
@@ -263,11 +321,17 @@ public class Coinage extends JavaPlugin {
         super.reloadConfig();
 
         // Clear previous data
+        Iterator<Currency> itCurrency = currencies.values().iterator();
+        while (itCurrency.hasNext()) {
+            itCurrency.next().unregister();
+            itCurrency.remove();
+        }
+
         currencies.clear();
-        Iterator<Recipe> it = getServer().recipeIterator();
-        while (it.hasNext()) {
-            if (moneyBagTypes.contains(it.next())) {
-                it.remove();
+        Iterator<Recipe> itRecipe = getServer().recipeIterator();
+        while (itRecipe.hasNext()) {
+            if (moneyBagTypes.contains(itRecipe.next())) {
+                itRecipe.remove();
             }
         }
         moneyBagTypes.clear();
@@ -276,7 +340,18 @@ public class Coinage extends JavaPlugin {
         ConfigurationSection currencySection = getConfig().getConfigurationSection("currencies");
         for (String key : currencySection.getKeys(false)) {
             Currency currency = new Currency(this, currencySection.getConfigurationSection(key));
-            currencies.put(key, currency);
+            currencies.put(key.toLowerCase(), currency);
+        }
+
+        // Register with Vault (if installed)
+        String vaultCurrency = getConfig().getString("vault-currency");
+        if (vaultCurrency != null) {
+            Currency currency = getCurrency(vaultCurrency);
+            if (currency != null) {
+                currency.register();
+            } else {
+                getLogger().warning("vault-currency in config.yml was not recognised: " + vaultCurrency);
+            }
         }
 
         // Load money bag types

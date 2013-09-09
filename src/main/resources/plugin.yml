@@ -18,6 +18,10 @@ commands:
     description: Sets the default currency to use with all Coinage commands. Defaults to the first currency created
     usage: /SetDefaultCurrency [name]
     permissions: coinage.commands.setdefaultcurrency
+  SetVaultCurrency:
+    description: Sets the default currency to use for Vault transactions. This requires you to have Vault installed.
+    usage: /SetVaultCurrency [id|none]
+    permissions: coinage.commands.setvaultcurrency
   CreateDenomination:
     description: Create a new denomination of a currency with the given value and text
     usage: /CreateDenomination ([currency]) [denomination] [alias] [value] ([item ID:data value]) [text]
@@ -76,6 +80,9 @@ permissions:
     default: op
   coinage.commands.setdefaultcurrency:
     description: Allows use of the SetDefaultCurrency command
+    default: op
+  coinage.commands.setvaultcurrency:
+    description: Allows use of the SetVaultCurrency command
     default: op
   coinage.commands.createdenomination:
     description: Allows use of the CreateDenomination command

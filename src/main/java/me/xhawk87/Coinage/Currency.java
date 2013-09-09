@@ -56,14 +56,33 @@ public class Currency {
                 byValue.put(denomination.getValue(), denomination);
             }
         }
+    }
 
-        // Register with Vault (if installed)
+    /**
+     * Registers this currency with Vault as the default currency to use for
+     * transactions
+     */
+    public void register() {
         if (plugin.getServer().getPluginManager().getPlugin("Vault") != null) {
             Vault vault = (Vault) plugin.getServer().getPluginManager().getPlugin("Vault");
             econ = new CoinageEconomy(plugin, this);
             econ.setEnabled(true);
             plugin.getServer().getServicesManager().register(Economy.class, econ, vault, ServicePriority.Normal);
-            plugin.getLogger().info(getAlias() + " was registered with Vault");
+            plugin.getLogger().info(getName()+ " was registered with Vault");
+        } else {
+            plugin.getLogger().warning("Could not find Vault to set " + getName() + " as the default vault currency");
+        }
+    }
+
+    /**
+     * Unregisters this currency with Vault. It will no longer be the default
+     * currency, if it was before
+     */
+    public void unregister() {
+        if (econ != null) {
+            econ.setEnabled(false);
+            plugin.getServer().getServicesManager().unregister(econ);
+            plugin.getLogger().info(getAlias() + " was unregistered with Vault");
         }
     }
 
@@ -71,14 +90,12 @@ public class Currency {
      * Deletes this currency. This will cause ALL denominations of this currency
      * to cease being considered legal tender, however none of them will be
      * removed from the game.
+     * 
+     * If this was the default currency used by Vault, it will no longer be.
      */
     public void delete() {
         plugin.deleteCurrency(this);
-        if (econ != null) {
-            econ.setEnabled(false);
-            plugin.getServer().getServicesManager().unregister(econ);
-            plugin.getLogger().info(getAlias() + " was unregistered with Vault");
-        }
+        unregister();
     }
 
     /**

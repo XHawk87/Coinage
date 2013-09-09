@@ -1,6 +1,7 @@
 ## Coinage configuration file
 ##
 ## default: String - The default currency to be used with Coinage commands
+## vault-currency: String - The default currency to use with Vault transaction (if vault is installed)
 ## currencies: - All currency information is in this section
 ##   [currency name]: - Settings for the named currency
 ##     alias: Text with spaces and colours - The display name for the currency
