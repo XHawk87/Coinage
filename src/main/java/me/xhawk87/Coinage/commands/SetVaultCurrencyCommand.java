@@ -43,7 +43,7 @@ public class SetVaultCurrencyCommand extends CoinCommand {
             return true;
         }
         if (plugin.setVaultCurrency(currency)) {
-            sender.sendMessage(currency.toString() + " is now the default currency used in Vault transactions");
+            sender.sendMessage(currency.toString() + " is now the default currency used in Vault transactions. A restart may be requires for all other plugins to notice the change");
         } else {
             sender.sendMessage("You must have Vault installed to set its default currency");
 
