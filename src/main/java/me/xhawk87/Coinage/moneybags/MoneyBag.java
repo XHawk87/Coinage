@@ -5,7 +5,6 @@
 package me.xhawk87.Coinage.moneybags;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import me.xhawk87.Coinage.Coinage;
+import me.xhawk87.Coinage.utils.FileUpdater;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -40,17 +40,18 @@ public class MoneyBag implements InventoryHolder {
     private Coinage plugin;
     private Inventory inventory;
     private File file;
-    private long saveCount;
+    private FileUpdater fileUpdater;
+
+    public MoneyBag(Coinage plugin, String id, int size, String title) {
+        this(plugin, id);
+        inventory = plugin.getServer().createInventory(this, size, title);
+    }
 
     public MoneyBag(Coinage plugin, String id) {
         this.plugin = plugin;
         this.id = id;
         this.file = new File(new File(plugin.getDataFolder(), "moneybags"), id + ".yml");
-    }
-
-    public MoneyBag(Coinage plugin, String id, int size, String title) {
-        this(plugin, id);
-        inventory = plugin.getServer().createInventory(this, size, title);
+        this.fileUpdater = new FileUpdater(file);
     }
 
     @Override
@@ -92,24 +93,7 @@ public class MoneyBag implements InventoryHolder {
                 contentsData.set(Integer.toString(i), coin);
             }
         }
-        saveCount++;
-        final long currentSave = saveCount;
-        final String toWrite = data.saveToString();
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                synchronized (file) {
-                    if (currentSave == saveCount) { // enforce save order
-                        plugin.getLogger().info("Saving moneybag to file " + file.getPath() + ": " + toWrite.length() + " chars");
-                        try (FileWriter out = new FileWriter(file)) {
-                            out.write(toWrite);
-                        } catch (IOException ex) {
-                            plugin.getLogger().log(Level.SEVERE, "Could not save moneybag: " + file.getPath(), ex);
-                        }
-                    }
-                }
-            }
-        }.runTaskAsynchronously(plugin);
+        fileUpdater.save(plugin, data.saveToString());
     }
 
     public void onLoad(FileConfiguration data) {
