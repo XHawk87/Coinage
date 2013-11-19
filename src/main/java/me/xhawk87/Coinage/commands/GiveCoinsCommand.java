@@ -68,6 +68,7 @@ public class GiveCoinsCommand extends CoinCommand {
             } else {
                 currency = plugin.getCurrency(firstArg);
                 if (currency == null) {
+                    currency = plugin.getDefaultCurrency();
                     player = plugin.getServer().getPlayer(firstArg);
                     if (player == null) {
                         sender.sendMessage("There is no matching player or currency with name " + firstArg);
