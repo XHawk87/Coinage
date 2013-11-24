@@ -36,61 +36,73 @@ currencies:
         print: '&e one-bit coin'
         value: 1
         item-id: 371
+        item-data: 0
       gold2bit:
         alias: '&e2p'
         print: '&e two-bit coin'
         value: 2
         item-id: 371
+        item-data: 0
       gold5bit:
         alias: '&e5p'
         print: '&e five-bit coin'
         value: 5
         item-id: 371
+        item-data: 0
       gold10bit:
         alias: '&e10p'
         print: '&e ten-bit coin'
         value: 10
         item-id: 371
+        item-data: 0
       gold20bit:
         alias: '&e20p'
         print: '&e twenty-bit coin'
         value: 20
         item-id: 371
+        item-data: 0
       gold50bit:
         alias: '&e50p'
         print: '&e fifty-bit coin'
         value: 50
         item-id: 371
+        item-data: 0
       gold1bar:
         alias: '&eG1'
         print: '&e one bar coin'
         value: 100
         item-id: 266
+        item-data: 0
       gold2bar:
         alias: '&eG2'
         print: '&e two bar coin'
         value: 200
         item-id: 266
+        item-data: 0
       gold5bar:
         alias: '&eG5'
         print: '&e five bar note'
         value: 500
         item-id: 339
+        item-data: 0
       gold10bar:
         alias: '&eG10'
         print: '&e ten bar note'
         value: 1000
         item-id: 339
+        item-data: 0
       gold20bar:
         alias: '&eG20'
         print: '&e twenty bar note'
         value: 2000
         item-id: 339
+        item-data: 0
       gold50bar:
         alias: '&eG50'
         print: '&e fifty bar note'
         value: 5000
         item-id: 339
+        item-data: 0
   goldstandardcommemorative:
     alias: '&eCommemorative Gold Standard'
     denominations:
@@ -99,3 +111,4 @@ currencies:
         print: '&e thousand bar coin'
         value: 100000
         item-id: 322
+        item-data: 0

@@ -394,7 +394,7 @@ public class Coinage extends JavaPlugin {
         }
         ItemMeta meta = item.getItemMeta();
         List<String> loreStrings = meta.getLore();
-        if (loreStrings.size() == 1) {
+        if (loreStrings.size() > 0) {
             String lore = loreStrings.get(0);
             String data = MoneyBag.decodeLore(lore);
             if (data.startsWith("moneybag")) { // This is a brand new money bag
