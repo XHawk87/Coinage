@@ -67,7 +67,7 @@ public class Currency {
             Vault vault = (Vault) plugin.getServer().getPluginManager().getPlugin("Vault");
             econ = new CoinageEconomy(plugin, this);
             econ.setEnabled(true);
-            plugin.getServer().getServicesManager().register(Economy.class, econ, vault, ServicePriority.Normal);
+            plugin.getServer().getServicesManager().register(Economy.class, econ, vault, ServicePriority.Highest);
             plugin.getLogger().info(getName()+ " was registered with Vault");
         } else {
             plugin.getLogger().warning("Could not find Vault to set " + getName() + " as the default vault currency");
@@ -399,6 +399,7 @@ public class Currency {
                     inv.clear(index);
                 } else {
                     item.setAmount(item.getAmount() - maxAmount);
+                    inv.setItem(index, item);
                 }
             } else {
                 remaining -= denomValue * item.getAmount();

@@ -287,6 +287,15 @@ public class Coinage extends JavaPlugin {
     public List<Currency> getAllCurrencies() {
         return new ArrayList<>(currencies.values());
     }
+    
+    /**
+     * Returns a list of all valid currency IDs
+     * 
+     * @return A list of all currency IDs
+     */
+    public List<String> getCurrencyIds() {
+        return new ArrayList<>(currencies.keySet());
+    }
 
     /**
      * Find the denomination for a given coin

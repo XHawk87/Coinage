@@ -5,7 +5,7 @@
 
     <groupId>me.xhawk87</groupId>
     <artifactId>Coinage</artifactId>
-    <version>0.2.1</version>
+    <version>0.2.2</version>
     <packaging>jar</packaging>
 
     <name>Coinage</name>
@@ -24,6 +24,10 @@
             <id>vault-repo</id>
             <url>http://ci.herocraftonline.com/plugin/repository/everything</url>
         </repository>
+        <repository>
+            <id>njol-repo</id>
+            <url>http://maven.njol.ch/repo/</url>
+        </repository>
     </repositories>
   
     <dependencies>
@@ -32,7 +36,7 @@
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
             <!-- Bukkit API Version, change if necessary -->
-            <version>1.6.2-R0.1-SNAPSHOT</version>
+            <version>1.7.2-R0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>net.milkbowl.vault</groupId>
@@ -44,6 +48,11 @@
             <artifactId>junit</artifactId>
             <version>4.4</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.njol</groupId>
+            <artifactId>skript</artifactId>
+            <version>2.0.2</version>
         </dependency>
     </dependencies>
     
