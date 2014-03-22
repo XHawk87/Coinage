@@ -37,7 +37,6 @@ public class Currency {
     private Map<String, Denomination> denominations = new HashMap<>();
     private Map<String, Denomination> byPrint = new HashMap<>();
     private NavigableMap<Integer, Denomination> byValue = new TreeMap<>();
-    private CoinageEconomy econ;
 
     public Currency(Coinage plugin, ConfigurationSection data) {
         this.plugin = plugin;
@@ -59,34 +58,6 @@ public class Currency {
     }
 
     /**
-     * Registers this currency with Vault as the default currency to use for
-     * transactions
-     */
-    public void register() {
-        if (plugin.getServer().getPluginManager().getPlugin("Vault") != null) {
-            Vault vault = (Vault) plugin.getServer().getPluginManager().getPlugin("Vault");
-            econ = new CoinageEconomy(plugin, this);
-            econ.setEnabled(true);
-            plugin.getServer().getServicesManager().register(Economy.class, econ, vault, ServicePriority.Highest);
-            plugin.getLogger().info(getName()+ " was registered with Vault");
-        } else {
-            plugin.getLogger().warning("Could not find Vault to set " + getName() + " as the default vault currency");
-        }
-    }
-
-    /**
-     * Unregisters this currency with Vault. It will no longer be the default
-     * currency, if it was before
-     */
-    public void unregister() {
-        if (econ != null) {
-            econ.setEnabled(false);
-            plugin.getServer().getServicesManager().unregister(econ);
-            plugin.getLogger().info(getAlias() + " was unregistered with Vault");
-        }
-    }
-
-    /**
      * Deletes this currency. This will cause ALL denominations of this currency
      * to cease being considered legal tender, however none of them will be
      * removed from the game.
@@ -95,7 +66,6 @@ public class Currency {
      */
     public void delete() {
         plugin.deleteCurrency(this);
-        unregister();
     }
 
     /**

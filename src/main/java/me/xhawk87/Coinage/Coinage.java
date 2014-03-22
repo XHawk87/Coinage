@@ -32,12 +32,16 @@ import me.xhawk87.Coinage.listeners.CoinListener;
 import me.xhawk87.Coinage.listeners.MoneyBagListener;
 import me.xhawk87.Coinage.moneybags.MoneyBag;
 import me.xhawk87.Coinage.moneybags.YamlFileFilter;
+import me.xhawk87.Coinage.vault.CoinageEconomy;
+import net.milkbowl.vault.Vault;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -50,6 +54,7 @@ public class Coinage extends JavaPlugin {
     private Map<String, MoneyBag> moneybags = new HashMap<>();
     private List<Recipe> moneyBagTypes = new ArrayList<>();
     private Map<String, PendingTransfers> pendingTransfers = new HashMap<>();
+    private CoinageEconomy vaultEconomy;
 
     @Override
     /**
@@ -252,6 +257,9 @@ public class Coinage extends JavaPlugin {
         currencies.remove(name.toLowerCase());
         getConfig().set("currencies." + name.toLowerCase(), null);
         saveConfig();
+        if (vaultEconomy.getCurrency().equals(currency)) {
+            unregisterVaultEconomy();
+        }
     }
 
     /**
@@ -340,7 +348,7 @@ public class Coinage extends JavaPlugin {
         if (!currencies.isEmpty()) {
             Currency vaultCurrency = getVaultCurrency();
             if (vaultCurrency != null) {
-                vaultCurrency.unregister();
+                unregisterVaultEconomy();
             }
         }
 
@@ -363,7 +371,7 @@ public class Coinage extends JavaPlugin {
         // Register with Vault (if installed)
         Currency vaultCurrency = getVaultCurrency();
         if (vaultCurrency != null) {
-            vaultCurrency.register();
+            registerVaultCurrency(vaultCurrency);
         }
 
         // Load money bag types
@@ -518,5 +526,37 @@ public class Coinage extends JavaPlugin {
         }
         pending.save();
         return true;
+    }
+
+    /**
+     * Registers this currency with Vault as the default currency to use for
+     * transactions
+     */
+    public void registerVaultCurrency(Currency currency) {
+        if (getServer().getPluginManager().getPlugin("Vault") != null) {
+            Vault vault = (Vault) getServer().getPluginManager().getPlugin("Vault");
+            if (vaultEconomy == null) {
+                vaultEconomy = new CoinageEconomy(this, currency);
+                getServer().getServicesManager().register(Economy.class, vaultEconomy, vault, ServicePriority.High);
+            } else {
+                vaultEconomy.setCurrency(currency);
+            }
+            vaultEconomy.setEnabled(true);
+            getLogger().info(currency.getName() + " was registered with Vault");
+        } else {
+            getLogger().warning("Could not find Vault to set " + currency.getName() + " as the default vault currency");
+        }
+    }
+
+    /**
+     * Unregisters this currency with Vault. It will no longer be the default
+     * currency, if it was before
+     */
+    public void unregisterVaultEconomy() {
+        if (vaultEconomy != null) {
+            getServer().getServicesManager().unregister(vaultEconomy);
+            getLogger().info(vaultEconomy.getCurrency().getAlias() + " was unregistered with Vault");
+            vaultEconomy.setEnabled(false);
+        }
     }
 }

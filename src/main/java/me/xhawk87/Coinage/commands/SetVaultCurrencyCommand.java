@@ -22,7 +22,7 @@ public class SetVaultCurrencyCommand extends CoinCommand {
 
     @Override
     public String getHelpMessage(CommandSender sender) {
-        return "/SetVaultCurrency [name|none]. Sets the default currency to use for Vault transactions, or 'none' to not use Coinage for Vault. The name must be the id of the currency not the display alias.";
+        return "/SetVaultCurrency [name|none] (-s). Sets the default currency to use for Vault transactions, or 'none' to not use Coinage for Vault. The name must be the id of the currency not the display alias. The -s option will execute this command silently if successful";
     }
 
     @Override
@@ -32,8 +32,18 @@ public class SetVaultCurrencyCommand extends CoinCommand {
 
     @Override
     public boolean execute(CommandSender sender, String[] args) {
-        if (args.length != 1) {
+        if (args.length < 1 || args.length > 2) {
             return false;
+        }
+
+        boolean silent = false;
+        if (args.length == 2) {
+            if (args[1].equals("-s")) {
+                silent = true;
+            } else {
+                sender.sendMessage("Unrecognised option (" + args[1] + "). Expected -s");
+                return false;
+            }
         }
 
         String name = args[0];
@@ -42,11 +52,15 @@ public class SetVaultCurrencyCommand extends CoinCommand {
             sender.sendMessage("There is no currency with id " + name);
             return true;
         }
+        Currency original = plugin.getVaultCurrency();
         if (plugin.setVaultCurrency(currency)) {
-            sender.sendMessage(currency.toString() + " is now the default currency used in Vault transactions. A restart may be required for all other plugins to notice the change");
+            if (original == null) {
+                sender.sendMessage(currency.toString() + " is now the default currency used in Vault transactions. A restart may be required for all other plugins to notice the change");
+            } else if (!silent) {
+                sender.sendMessage(currency.toString() + " replaced " + original.toString() + " as the Vault currency with immediate effect");
+            }
         } else {
             sender.sendMessage("You must have Vault installed to set its default currency");
-
         }
         return true;
     }
