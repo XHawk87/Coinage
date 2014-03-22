@@ -118,20 +118,16 @@ public class CoinageEconomy implements Economy {
                 return new EconomyResponse(0, currency.getCoinCount(player.getInventory()), EconomyResponse.ResponseType.FAILURE, player.getDisplayName() + " does not have enough " + currency.getAlias());
             }
         }
-        return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, playerName + " is not online");
+        if (plugin.addPendingWithdrawal(playerName, currency, (long) amount)) {
+            return new EconomyResponse(amount, plugin.getPendingBalance(playerName, currency), EconomyResponse.ResponseType.SUCCESS, (int) amount + " " + currency.getAlias() + " was transferred from " + playerName + "'s offline balance");
+        } else {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, playerName + " is not online and did not have enough " + currency.getAlias() + " in their account");
+        }
     }
 
     @Override
     public EconomyResponse withdrawPlayer(String playerName, String worldName, double amount) {
-        Player player = plugin.getServer().getPlayerExact(playerName);
-        if (player != null) {
-            if (currency.spend(player.getInventory(), (int) amount)) {
-                return new EconomyResponse(amount, currency.getCoinCount(player.getInventory()), EconomyResponse.ResponseType.SUCCESS, player.getDisplayName() + " spent " + (int) amount + " " + currency.getAlias());
-            } else {
-                return new EconomyResponse(0, currency.getCoinCount(player.getInventory()), EconomyResponse.ResponseType.FAILURE, player.getDisplayName() + " does not have enough " + currency.getAlias());
-            }
-        }
-        return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, playerName + " is not online");
+        return withdrawPlayer(playerName, amount);
     }
 
     @Override
@@ -144,20 +140,16 @@ public class CoinageEconomy implements Economy {
                 return new EconomyResponse(0, currency.getCoinCount(player.getInventory()), EconomyResponse.ResponseType.FAILURE, "An error occurred which prevented this transaction from taking place");
             }
         }
-        return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, playerName + " is not online");
+        if (plugin.addPendingDeposit(playerName, currency, (long) amount)) {
+            return new EconomyResponse(amount, plugin.getPendingBalance(playerName, currency), EconomyResponse.ResponseType.SUCCESS, (int) amount + " " + currency.getAlias() + " was transferred to " + playerName + "'s offline balance");
+        } else {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, playerName + " is not online");
+        }
     }
 
     @Override
     public EconomyResponse depositPlayer(String playerName, String worldName, double amount) {
-        Player player = plugin.getServer().getPlayerExact(playerName);
-        if (player != null) {
-            if (currency.give(player.getInventory(), (int) amount)) {
-                return new EconomyResponse(amount, currency.getCoinCount(player.getInventory()), EconomyResponse.ResponseType.SUCCESS, player.getDisplayName() + " received " + (int) amount + " " + currency.getAlias());
-            } else {
-                return new EconomyResponse(0, currency.getCoinCount(player.getInventory()), EconomyResponse.ResponseType.FAILURE, "An error occurred which prevented this transaction from taking place");
-            }
-        }
-        return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, playerName + " is not online");
+        return depositPlayer(playerName, amount);
     }
 
     @Override

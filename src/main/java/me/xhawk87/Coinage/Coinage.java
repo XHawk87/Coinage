@@ -34,6 +34,7 @@ import me.xhawk87.Coinage.moneybags.MoneyBag;
 import me.xhawk87.Coinage.moneybags.YamlFileFilter;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -48,6 +49,7 @@ public class Coinage extends JavaPlugin {
     private Map<String, Currency> currencies = new HashMap<>();
     private Map<String, MoneyBag> moneybags = new HashMap<>();
     private List<Recipe> moneyBagTypes = new ArrayList<>();
+    private Map<String, PendingTransfers> pendingTransfers = new HashMap<>();
 
     @Override
     /**
@@ -58,8 +60,9 @@ public class Coinage extends JavaPlugin {
         saveDefaultConfig();
         reloadConfig();
 
-        // Load money bags
+        // Load data
         loadMoneyBags();
+        loadOfflineAccounts();
 
         // Register commands
         getCommand("CoinList").setExecutor(new CoinListCommand(this));
@@ -287,10 +290,10 @@ public class Coinage extends JavaPlugin {
     public List<Currency> getAllCurrencies() {
         return new ArrayList<>(currencies.values());
     }
-    
+
     /**
      * Returns a list of all valid currency IDs
-     * 
+     *
      * @return A list of all currency IDs
      */
     public List<String> getCurrencyIds() {
@@ -453,5 +456,67 @@ public class Coinage extends JavaPlugin {
         } else {
             moneybagsFolder.mkdirs();
         }
+    }
+
+    public void loadOfflineAccounts() {
+        FilenameFilter filenameFilter = new YamlFileFilter();
+        File pendingTransfersFolder = new File(getDataFolder(), "pending");
+        if (pendingTransfersFolder.exists()) {
+            for (String filename : pendingTransfersFolder.list(filenameFilter)) {
+                String key = filename.substring(0, filename.length() - ".yml".length());
+                PendingTransfers pendingTransfer = new PendingTransfers(this, key);
+                pendingTransfer.load();
+                pendingTransfers.put(key, pendingTransfer);
+            }
+        } else {
+            pendingTransfersFolder.mkdirs();
+        }
+    }
+
+    private PendingTransfers getOrCreatePendingTransfers(String playerName) {
+        PendingTransfers pending = pendingTransfers.get(playerName);
+        if (pending == null) {
+            pending = new PendingTransfers(this, playerName);
+            pendingTransfers.put(playerName, pending);
+        }
+        return pending;
+    }
+
+    public void completePendingTransactions(Player player) {
+        PendingTransfers pending = pendingTransfers.get(player.getName());
+        if (pending != null) {
+            for (Currency currency : currencies.values()) {
+                long balance = pending.getBalance(currency);
+                if (balance > 0) {
+                    currency.give(player, (int) balance);
+                }
+            }
+        }
+    }
+
+    public long getPendingBalance(String playerName, Currency currency) {
+        PendingTransfers pending = pendingTransfers.get(playerName);
+        if (pending == null) {
+            return 0;
+        }
+        return pending.getBalance(currency);
+    }
+
+    public boolean addPendingDeposit(String playerName, Currency currency, long amount) {
+        PendingTransfers pending = getOrCreatePendingTransfers(playerName);
+        if (!pending.deposit(currency, amount)) {
+            return false;
+        }
+        pending.save();
+        return true;
+    }
+
+    public boolean addPendingWithdrawal(String playerName, Currency currency, long amount) {
+        PendingTransfers pending = getOrCreatePendingTransfers(playerName);
+        if (!pending.withdraw(currency, amount)) {
+            return false;
+        }
+        pending.save();
+        return true;
     }
 }
