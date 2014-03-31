@@ -209,7 +209,9 @@ public class CoinageEconomy implements Economy {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-        setCurrency(null);
+        if (!enabled) {
+            setCurrency(null);
+        }
     }
 
     public void setCurrency(Currency currency) {
