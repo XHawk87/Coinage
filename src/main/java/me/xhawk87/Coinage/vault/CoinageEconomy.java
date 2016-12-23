@@ -10,6 +10,7 @@ import me.xhawk87.Coinage.Coinage;
 import me.xhawk87.Coinage.Currency;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 /**
@@ -18,13 +19,28 @@ import org.bukkit.entity.Player;
  */
 public class CoinageEconomy implements Economy {
 
-    private Coinage plugin;
+    private final Coinage plugin;
     private Currency currency;
     private boolean enabled;
 
     public CoinageEconomy(Coinage plugin, Currency currency) {
         this.plugin = plugin;
         this.currency = currency;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        if (!enabled) {
+            setCurrency(null);
+        }
+    }
+
+    public void setCurrency(Currency currency) {
+        this.currency = currency;
+    }
+
+    public Currency getCurrency() {
+        return currency;
     }
 
     @Override
@@ -62,55 +78,85 @@ public class CoinageEconomy implements Economy {
         return currency.getAlias();
     }
 
-    @Override
-    public boolean hasAccount(String playerName) {
-        return true;
+    private boolean hasAccount(Player player) {
+        return player != null;
     }
 
     @Override
-    public boolean hasAccount(String playerName, String worldName) {
-        return true;
+    public boolean hasAccount(String playerName) {
+        return hasAccount(plugin.getServer().getPlayerExact(playerName));
+    }
+
+    @Override
+    public boolean hasAccount(String playerName, String ignore) {
+        return hasAccount(playerName);
+    }
+
+    @Override
+    public boolean hasAccount(OfflinePlayer playerRef) {
+        return hasAccount(playerRef.getPlayer());
+    }
+
+    @Override
+    public boolean hasAccount(OfflinePlayer playerRef, String ignore) {
+        return hasAccount(playerRef);
+    }
+
+    private double getBalance(Player player) {
+        if (player != null) {
+            return currency.getCoinCount(player.getInventory());
+        }
+        return 0.0;
     }
 
     @Override
     public double getBalance(String playerName) {
-        Player player = plugin.getServer().getPlayerExact(playerName);
-        if (player != null) {
-            return currency.getCoinCount(player.getInventory());
-        }
-        return 0.0;
+        return getBalance(plugin.getServer().getPlayerExact(playerName));
     }
 
     @Override
-    public double getBalance(String playerName, String world) {
-        Player player = plugin.getServer().getPlayerExact(playerName);
+    public double getBalance(String playerName, String ignore) {
+        return getBalance(playerName);
+    }
+
+    @Override
+    public double getBalance(OfflinePlayer playerRef) {
+        return getBalance(playerRef.getPlayer());
+    }
+
+    @Override
+    public double getBalance(OfflinePlayer playerRef, String ignore) {
+        return getBalance(playerRef);
+    }
+
+    private boolean has(Player player, double amount) {
         if (player != null) {
-            return currency.getCoinCount(player.getInventory());
+            return currency.getCoinCount(player.getInventory()) >= amount;
         }
-        return 0.0;
+        return false;
     }
 
     @Override
     public boolean has(String playerName, double amount) {
-        Player player = plugin.getServer().getPlayerExact(playerName);
-        if (player != null) {
-            return currency.getCoinCount(player.getInventory()) >= amount;
-        }
-        return false;
+        return has(plugin.getServer().getPlayerExact(playerName), amount);
     }
 
     @Override
-    public boolean has(String playerName, String worldName, double amount) {
-        Player player = plugin.getServer().getPlayerExact(playerName);
-        if (player != null) {
-            return currency.getCoinCount(player.getInventory()) >= amount;
-        }
-        return false;
+    public boolean has(String playerName, String ignore, double amount) {
+        return has(playerName, amount);
     }
 
     @Override
-    public EconomyResponse withdrawPlayer(String playerName, double amount) {
-        Player player = plugin.getServer().getPlayerExact(playerName);
+    public boolean has(OfflinePlayer playerRef, double amount) {
+        return has(playerRef.getPlayer(), amount);
+    }
+
+    @Override
+    public boolean has(OfflinePlayer playerRef, String ignore, double amount) {
+        return has(playerRef, amount);
+    }
+
+    private EconomyResponse withdrawPlayer(Player player, String playerName, double amount) {
         if (player != null) {
             if (currency.spend(player.getInventory(), (int) amount)) {
                 return new EconomyResponse(amount, currency.getCoinCount(player.getInventory()), EconomyResponse.ResponseType.SUCCESS, player.getDisplayName() + " spent " + (int) amount + " " + currency.getAlias());
@@ -126,13 +172,26 @@ public class CoinageEconomy implements Economy {
     }
 
     @Override
-    public EconomyResponse withdrawPlayer(String playerName, String worldName, double amount) {
+    public EconomyResponse withdrawPlayer(String playerName, double amount) {
+        return withdrawPlayer(plugin.getServer().getPlayerExact(playerName), playerName, amount);
+    }
+
+    @Override
+    public EconomyResponse withdrawPlayer(String playerName, String ignore, double amount) {
         return withdrawPlayer(playerName, amount);
     }
 
     @Override
-    public EconomyResponse depositPlayer(String playerName, double amount) {
-        Player player = plugin.getServer().getPlayerExact(playerName);
+    public EconomyResponse withdrawPlayer(OfflinePlayer playerRef, double amount) {
+        return withdrawPlayer(playerRef.getPlayer(), playerRef.getName(), amount);
+    }
+
+    @Override
+    public EconomyResponse withdrawPlayer(OfflinePlayer playerRef, String ignore, double amount) {
+        return withdrawPlayer(playerRef, amount);
+    }
+
+    private EconomyResponse depositPlayer(Player player, String playerName, double amount) {
         if (player != null) {
             if (currency.give(player.getInventory(), (int) amount)) {
                 return new EconomyResponse(amount, currency.getCoinCount(player.getInventory()), EconomyResponse.ResponseType.SUCCESS, player.getDisplayName() + " received " + (int) amount + " " + currency.getAlias());
@@ -148,48 +207,91 @@ public class CoinageEconomy implements Economy {
     }
 
     @Override
+    public EconomyResponse depositPlayer(String playerName, double amount) {
+        return depositPlayer(plugin.getServer().getPlayerExact(playerName), playerName, amount);
+
+    }
+
+    @Override
     public EconomyResponse depositPlayer(String playerName, String worldName, double amount) {
         return depositPlayer(playerName, amount);
     }
 
     @Override
-    public EconomyResponse createBank(String name, String player) {
+    public EconomyResponse depositPlayer(OfflinePlayer playerRef, double amount) {
+        return depositPlayer(playerRef.getPlayer(), playerRef.getName(), amount);
+    }
+
+    @Override
+    public EconomyResponse depositPlayer(OfflinePlayer playerRef, String ignore, double amount) {
+        return depositPlayer(playerRef, amount);
+    }
+
+    private EconomyResponse createBank(String bankName, Player player) {
         return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, "Coinage does not include bank support");
     }
 
     @Override
-    public EconomyResponse deleteBank(String name) {
+    public EconomyResponse createBank(String bankName, String playerName) {
+        return createBank(bankName, plugin.getServer().getPlayerExact(playerName));
+    }
+
+    @Override
+    public EconomyResponse createBank(String bankName, OfflinePlayer playerRef) {
+        return createBank(bankName, playerRef.getPlayer());
+    }
+
+    @Override
+    public EconomyResponse deleteBank(String bankName) {
         return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, "Coinage does not include bank support");
     }
 
     @Override
-    public EconomyResponse bankBalance(String name) {
+    public EconomyResponse bankBalance(String bankName) {
         return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, "Coinage does not include bank support");
     }
 
     @Override
-    public EconomyResponse bankHas(String name, double amount) {
+    public EconomyResponse bankHas(String bankName, double amount) {
         return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, "Coinage does not include bank support");
     }
 
     @Override
-    public EconomyResponse bankWithdraw(String name, double amount) {
+    public EconomyResponse bankWithdraw(String bankName, double amount) {
         return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, "Coinage does not include bank support");
     }
 
     @Override
-    public EconomyResponse bankDeposit(String name, double amount) {
+    public EconomyResponse bankDeposit(String bankName, double amount) {
+        return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, "Coinage does not include bank support");
+    }
+
+    private EconomyResponse isBankOwner(String bankName, Player player) {
         return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, "Coinage does not include bank support");
     }
 
     @Override
-    public EconomyResponse isBankOwner(String name, String playerName) {
+    public EconomyResponse isBankOwner(String bankName, String playerName) {
+        return isBankOwner(bankName, plugin.getServer().getPlayerExact(playerName));
+    }
+
+    @Override
+    public EconomyResponse isBankOwner(String bankName, OfflinePlayer playerRef) {
+        return isBankOwner(bankName, playerRef.getPlayer());
+    }
+
+    private EconomyResponse isBankMember(String bankName, Player player) {
         return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, "Coinage does not include bank support");
     }
 
     @Override
-    public EconomyResponse isBankMember(String name, String playerName) {
-        return new EconomyResponse(0.0, 0.0, EconomyResponse.ResponseType.NOT_IMPLEMENTED, "Coinage does not include bank support");
+    public EconomyResponse isBankMember(String bankName, String playerName) {
+        return isBankMember(bankName, plugin.getServer().getPlayerExact(playerName));
+    }
+
+    @Override
+    public EconomyResponse isBankMember(String bankName, OfflinePlayer playerRef) {
+        return isBankMember(bankName, playerRef.getPlayer());
     }
 
     @Override
@@ -197,28 +299,27 @@ public class CoinageEconomy implements Economy {
         return new ArrayList<>();
     }
 
+    private boolean createPlayerAccount(Player player) {
+        return player != null;
+    }
+
     @Override
     public boolean createPlayerAccount(String playerName) {
-        return true;
+        return createPlayerAccount(plugin.getServer().getPlayerExact(playerName));
     }
 
     @Override
-    public boolean createPlayerAccount(String playerName, String worldName) {
-        return true;
+    public boolean createPlayerAccount(String playerName, String ignore) {
+        return createPlayerAccount(playerName);
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-        if (!enabled) {
-            setCurrency(null);
-        }
+    @Override
+    public boolean createPlayerAccount(OfflinePlayer playerRef) {
+        return createPlayerAccount(playerRef.getPlayer());
     }
 
-    public void setCurrency(Currency currency) {
-        this.currency = currency;
-    }
-
-    public Currency getCurrency() {
-        return currency;
+    @Override
+    public boolean createPlayerAccount(OfflinePlayer playerRef, String ignore) {
+        return createPlayerAccount(playerRef);
     }
 }
